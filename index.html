@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Production-grade server health monitoring system for RHEL 9 / Rocky Linux — automated CPU, RAM, disk, and service checks with email/Slack alerts and daily HTML reports." />
+    <meta name="theme-color" content="#020705" />
+    <meta property="og:title" content="Server Health Monitor — Auto-Alert System for Linux" />
+    <meta property="og:description" content="9 production Bash scripts. CPU, RAM, disk, service, and network monitoring with auto-restart, email/Slack alerts, and daily HTML reports on RHEL 9." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Server Health Monitor — Auto-Alert System</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/monokai.min.css" integrity="sha512-R2V6+gFVA8gCRqQxPJDqfHNIibQaqNqvCJdGr6bB8tgV2MdxLu9MBsJWL0yXVSYRFNHFd6a3yNZ9YMzV8eag==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <!-- Scroll progress bar -->
+    <div id="progress-bar" aria-hidden="true"></div>
+
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <!-- ═══════════════════════════════ HEADER ══════════════════════════════ -->
+    <header id="site-header">
+      <div class="header-brand">
+        <svg class="brand-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="10" cy="10" r="2.5" fill="currentColor"/>
+          <line x1="10" y1="2" x2="10" y2="7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="10" y1="12.5" x2="10" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="2" y1="10" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="12.5" y1="10" x2="18" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-text">SERVER<span class="brand-sep">/</span>MON</span>
+      </div>
+
+      <nav class="header-nav" id="header-nav" aria-label="Main navigation">
+        <a class="nav-link" href="#architecture">Architecture</a>
+        <a class="nav-link" href="#scripts">Scripts</a>
+        <a class="nav-link" href="#alert-demo">Alerts</a>
+        <a class="nav-link" href="#skills">Skills</a>
+        <a class="nav-link" href="#pipeline">Pipeline</a>
+        <a class="nav-link" href="#playground">Playground</a>
+      </nav>
+
+      <div class="header-right">
+        <div class="header-status">
+          <span class="status-dot status-green" aria-hidden="true"></span>
+          <span class="status-label">9 Scripts</span>
+        </div>
+        <a class="gh-btn" href="https://github.com/samiulAsumel/server-health-monitor" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+          </svg>
+          GitHub
+        </a>
+        <button class="hamburger" id="hamburger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="header-nav">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main-content">
+
+    <!-- ═══════════════════════════════ HERO ════════════════════════════════ -->
+    <section id="hero">
+      <div class="hero-scanline" aria-hidden="true"></div>
+      <div class="hero-grid-overlay" aria-hidden="true"></div>
+      <div class="hero-aurora" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-eyebrow">
+            <span class="eyebrow-badge badge-green">RHEL 9 · Rocky Linux</span>
+            <span class="eyebrow-badge badge-amber">ShellCheck Verified</span>
+            <span class="eyebrow-badge badge-red">Auto-Alert</span>
+            <span class="eyebrow-badge badge-cyan">Cron + Systemd</span>
+          </div>
+          <h1 class="hero-headline">
+            SERVER<br/>
+            HEALTH<br/>
+            <span class="headline-accent">MONITOR</span>
+          </h1>
+          <p class="hero-sub">
+            Proactive server monitoring for Linux — CPU, RAM, disk, services, and
+            network checks every 5 minutes. Instant email/Slack alerts before
+            crashes happen. Daily HTML reports while you sleep.
+          </p>
+          <div class="hero-meta">
+            <div class="meta-item">
+              <span class="meta-val" data-count="9">9</span>
+              <span class="meta-label">Scripts</span>
+            </div>
+            <div class="meta-divider" aria-hidden="true"></div>
+            <div class="meta-item">
+              <span class="meta-val" data-count="5">5</span>
+              <span class="meta-label">Check Types</span>
+            </div>
+            <div class="meta-divider" aria-hidden="true"></div>
+            <div class="meta-item">
+              <span class="meta-val" data-count="5">5</span>
+              <span class="meta-label">Min Interval</span>
+            </div>
+          </div>
+          <div class="hero-actions">
+            <a class="btn-primary" href="#scripts">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+              View Scripts
+            </a>
+            <a class="btn-ghost" href="#playground">Try Simulator</a>
+          </div>
+        </div>
+
+        <!-- Live system status panel -->
+        <div class="hero-panel">
+          <div class="panel-header">
+            <div class="panel-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <span class="panel-title">admin@web-server-01 — health_monitor.sh</span>
+          </div>
+
+          <!-- Live metric gauges strip -->
+          <div class="panel-gauges" aria-label="Live system metrics">
+            <div class="gauge-item">
+              <svg class="gauge-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="gauge-track" cx="50" cy="50" r="38"/>
+                <circle class="gauge-arc gauge-arc-cpu" id="gauge-arc-cpu" cx="50" cy="50" r="38"/>
+                <text class="gauge-pct" id="gauge-pct-cpu" x="50" y="50" text-anchor="middle" dominant-baseline="central">23%</text>
+              </svg>
+              <div class="gauge-label">CPU</div>
+            </div>
+            <div class="gauge-item">
+              <svg class="gauge-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="gauge-track" cx="50" cy="50" r="38"/>
+                <circle class="gauge-arc gauge-arc-ram" id="gauge-arc-ram" cx="50" cy="50" r="38"/>
+                <text class="gauge-pct" id="gauge-pct-ram" x="50" y="50" text-anchor="middle" dominant-baseline="central">41%</text>
+              </svg>
+              <div class="gauge-label">RAM</div>
+            </div>
+            <div class="gauge-item">
+              <svg class="gauge-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="gauge-track" cx="50" cy="50" r="38"/>
+                <circle class="gauge-arc gauge-arc-disk" id="gauge-arc-disk" cx="50" cy="50" r="38"/>
+                <text class="gauge-pct" id="gauge-pct-disk" x="50" y="50" text-anchor="middle" dominant-baseline="central">87%</text>
+              </svg>
+              <div class="gauge-label">DISK /var</div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="term-prompt">
+              <span class="prompt-host">admin@web-server-01</span><span class="prompt-sep">:</span><span class="prompt-path">~</span><span class="prompt-dollar">$</span>
+              <span class="prompt-cmd" id="term-cmd"></span>
+            </div>
+            <div class="term-lines" id="term-lines"></div>
+            <div class="service-status-grid" id="svc-status-grid">
+              <div class="svc-row">
+                <span class="svc-dot svc-active" aria-hidden="true"></span>
+                <span class="svc-name">nginx.service</span>
+                <span class="svc-state">active (running)</span>
+                <span class="svc-uptime">18d 6h</span>
+              </div>
+              <div class="svc-row">
+                <span class="svc-dot svc-active" aria-hidden="true"></span>
+                <span class="svc-name">mysql.service</span>
+                <span class="svc-state">active (running)</span>
+                <span class="svc-uptime">18d 6h</span>
+              </div>
+              <div class="svc-row">
+                <span class="svc-dot svc-active" aria-hidden="true"></span>
+                <span class="svc-name">sshd.service</span>
+                <span class="svc-state">active (running)</span>
+                <span class="svc-uptime">18d 6h</span>
+              </div>
+              <div class="svc-row">
+                <span class="svc-dot svc-alert" aria-hidden="true"></span>
+                <span class="svc-name">firewalld.service</span>
+                <span class="svc-state">failed → restarted</span>
+                <span class="svc-uptime">0h 0m</span>
+              </div>
+              <div class="svc-row">
+                <span class="svc-dot svc-timer" aria-hidden="true"></span>
+                <span class="svc-name">generate_report.sh</span>
+                <span class="svc-state">cron active</span>
+                <span class="svc-uptime">→ 08:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-hint" aria-hidden="true">
+        <div class="scroll-line"></div>
+        <span>SCROLL</span>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ STATS BAR ════════════════════════════ -->
+    <div id="stats-bar" aria-hidden="true">
+      <div class="sb-anchor sb-anchor-left">
+        <span class="sb-live-dot"></span>
+        <span class="sb-live-label">LIVE</span>
+      </div>
+      <div class="sb-track-wrap">
+        <div class="sb-fade sb-fade-left"></div>
+        <div class="sb-track">
+          <span class="sb-item sb-item-ok">✓ CPU: 23% — OK</span>
+          <span class="sb-item sb-item-ok">✓ RAM: 41% — OK</span>
+          <span class="sb-item sb-item-warn">⚠ DISK /var: 83% — ALERT</span>
+          <span class="sb-item sb-item-ok">✓ nginx: running</span>
+          <span class="sb-item sb-item-ok">✓ mysql: running</span>
+          <span class="sb-item sb-item-crit">✗ firewalld: failed → restarted</span>
+          <span class="sb-item sb-item-ok">✓ Network: ICMP OK | DNS OK</span>
+          <span class="sb-item sb-item-ok">✓ Load(1m): 1.24</span>
+          <span class="sb-item">Uptime: 18d 6h 42m</span>
+          <span class="sb-item">Report: 08:00 daily</span>
+          <span class="sb-item">Alert cooldown: 30 min</span>
+          <span class="sb-item">Log: /var/log/healthmonitor/</span>
+          <!-- Duplicate for seamless loop -->
+          <span class="sb-item sb-item-ok">✓ CPU: 23% — OK</span>
+          <span class="sb-item sb-item-ok">✓ RAM: 41% — OK</span>
+          <span class="sb-item sb-item-warn">⚠ DISK /var: 83% — ALERT</span>
+          <span class="sb-item sb-item-ok">✓ nginx: running</span>
+          <span class="sb-item sb-item-ok">✓ mysql: running</span>
+          <span class="sb-item sb-item-crit">✗ firewalld: failed → restarted</span>
+          <span class="sb-item sb-item-ok">✓ Network: ICMP OK | DNS OK</span>
+          <span class="sb-item sb-item-ok">✓ Load(1m): 1.24</span>
+          <span class="sb-item">Uptime: 18d 6h 42m</span>
+          <span class="sb-item">Report: 08:00 daily</span>
+          <span class="sb-item">Alert cooldown: 30 min</span>
+          <span class="sb-item">Log: /var/log/healthmonitor/</span>
+        </div>
+        <div class="sb-fade sb-fade-right"></div>
+      </div>
+      <div class="sb-anchor sb-anchor-right">
+        <span class="sb-live-label">v1.0.0</span>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ ARCHITECTURE ═════════════════════════ -->
+    <section id="architecture">
+      <div class="section-inner">
+        <header class="section-header reveal">
+          <p class="section-tag">ARCHITECTURE</p>
+          <h2 class="section-title">How the system works</h2>
+          <p class="section-sub">A modular, cron-driven pipeline — each module is independently testable and sourced by the central orchestrator at runtime.</p>
+        </header>
+
+        <div class="arch-grid">
+          <div class="arch-card reveal" data-step="1">
+            <div class="arch-icon arch-icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3>Cron Scheduler</h3>
+            <p>Cron fires <code>health_monitor.sh</code> every 5 minutes. Daily report runs at 08:00. Both jobs are installed by <code>install.sh</code> to <code>/etc/cron.d/healthmonitor</code>.</p>
+            <div class="arch-tags">
+              <span class="arch-tag">*/5 * * * *</span>
+              <span class="arch-tag">/etc/cron.d/</span>
+              <span class="arch-tag">root</span>
+            </div>
+          </div>
+          <div class="arch-card reveal" data-step="2">
+            <div class="arch-icon arch-icon-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+                <path d="M17.66 7.34a6 6 0 0 1 0 9.32M6.34 7.34a6 6 0 0 0 0 9.32"/>
+              </svg>
+            </div>
+            <h3>Orchestrator</h3>
+            <p><code>health_monitor.sh</code> sources <code>config.conf</code> then all 5 check modules. Runs checks sequentially, logs every result with timestamp, and dispatches alerts for any threshold breach.</p>
+            <div class="arch-tags">
+              <span class="arch-tag">source modules</span>
+              <span class="arch-tag">set -euo pipefail</span>
+              <span class="arch-tag">trap ERR</span>
+            </div>
+          </div>
+          <div class="arch-card reveal" data-step="3">
+            <div class="arch-icon arch-icon-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <h3>Check Modules</h3>
+            <p>Five self-contained modules: CPU (top/proc), RAM (free -m), disk (df -h all mounts), services (systemctl + auto-restart), network (ICMP + DNS). Each returns <code>STATUS|detail</code>.</p>
+            <div class="arch-tags">
+              <span class="arch-tag">check_cpu</span>
+              <span class="arch-tag">check_ram</span>
+              <span class="arch-tag">check_disk</span>
+              <span class="arch-tag">check_services</span>
+              <span class="arch-tag">check_network</span>
+            </div>
+          </div>
+          <div class="arch-card reveal" data-step="4">
+            <div class="arch-icon arch-icon-red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+            <h3>Alert Dispatcher</h3>
+            <p><code>send_alert.sh</code> supports email (mailx/sendmail) and Slack webhooks (curl). Cooldown files prevent alert storms — same alert type won't fire twice within 30 minutes.</p>
+            <div class="arch-tags">
+              <span class="arch-tag">mailx</span>
+              <span class="arch-tag">slack webhook</span>
+              <span class="arch-tag">cooldown</span>
+            </div>
+          </div>
+          <div class="arch-card reveal" data-step="5">
+            <div class="arch-icon arch-icon-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <h3>Daily Report</h3>
+            <p><code>generate_report.sh</code> parses 24 h of logs, calculates CPU/RAM averages and peaks, checks current disk/service state, and sends a styled HTML email report at 08:00 daily.</p>
+            <div class="arch-tags">
+              <span class="arch-tag">HTML email</span>
+              <span class="arch-tag">log parser</span>
+              <span class="arch-tag">awk stats</span>
+            </div>
+          </div>
+          <div class="arch-card reveal" data-step="6">
+            <div class="arch-icon arch-icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <h3>Logging</h3>
+            <p>All check results written to <code>/var/log/healthmonitor/monitor.log</code> with format <code>[YYYY-MM-DD HH:MM:SS] [MODULE] [STATUS] detail</code>. Alerts also written to <code>alerts.log</code>. 30-day rotation.</p>
+            <div class="arch-tags">
+              <span class="arch-tag">monitor.log</span>
+              <span class="arch-tag">alerts.log</span>
+              <span class="arch-tag">30-day retention</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ SCRIPTS ══════════════════════════════ -->
+    <section id="scripts">
+      <div class="section-inner">
+        <header class="section-header reveal">
+          <p class="section-tag">SCRIPTS</p>
+          <h2 class="section-title">9 production-grade files</h2>
+          <p class="section-sub">Every script is ShellCheck compatible, uses strict mode, and handles errors explicitly. Click a script to view the full source.</p>
+        </header>
+
+        <div class="scripts-layout">
+          <!-- Nav sidebar -->
+          <nav class="scripts-nav" aria-label="Script selector">
+            <div class="scripts-search-wrap">
+              <svg class="search-icon" width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
+              <input type="search" class="scripts-search" id="script-search" placeholder="Search scripts…" aria-label="Search scripts" autocomplete="off" spellcheck="false" />
+              <kbd class="search-kbd">⌘K</kbd>
+            </div>
+            <ul class="scripts-nav-list" id="script-nav-list" role="tablist" aria-label="Script files">
+              <!-- Populated by main.js -->
+            </ul>
+            <div class="scripts-nav-hint" aria-hidden="true">
+              <kbd>↑</kbd><kbd>↓</kbd> navigate &nbsp; <kbd>↵</kbd> open
+            </div>
+          </nav>
+
+          <!-- Code panel -->
+          <div class="script-panel" id="script-panel" role="tabpanel">
+            <div class="script-panel-header">
+              <div class="script-filename">
+                <span class="file-dir" id="panel-dir"></span>
+                <span id="panel-name"></span>
+              </div>
+              <div class="script-panel-actions">
+                <button class="panel-btn" id="copy-btn" aria-label="Copy script to clipboard">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2 0h8v8H6V2zM2 6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2H8v2H2V8h2V6H2z"/></svg>
+                  Copy
+                </button>
+                <button class="panel-btn" id="download-btn" aria-label="Download script">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 12l-5-5 1.5-1.5L7 9V2h2v7l2.5-3.5L13 7l-5 5zm-6 2h12v2H2v-2z"/></svg>
+                  Download
+                </button>
+              </div>
+            </div>
+            <div class="script-desc-bar">
+              <div id="panel-desc"></div>
+              <div class="script-desc-tags" id="panel-tags"></div>
+            </div>
+            <div class="code-with-lines">
+              <div class="line-numbers" id="line-numbers" aria-hidden="true"></div>
+              <div class="script-code-wrap">
+                <pre><code class="language-bash" id="script-code"></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ ALERT DEMO ═══════════════════════════ -->
+    <section id="alert-demo">
+      <div class="section-inner">
+        <header class="section-header reveal">
+          <p class="section-tag">ALERTS</p>
+          <h2 class="section-title">Instant alert delivery</h2>
+          <p class="section-sub">When any threshold is crossed, an alert fires within 5 minutes. Cooldown logic prevents repeat noise — same alert type waits 30 minutes before re-firing.</p>
+        </header>
+
+        <div class="alert-demo-grid reveal">
+          <!-- Left: tabbed alert mock -->
+          <div class="alert-mock-wrap">
+            <div class="alert-tabs" role="tablist" aria-label="Alert channel preview">
+              <button class="a-tab active" id="tab-email" role="tab" aria-selected="true" aria-controls="apanel-email">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/></svg>
+                Email
+              </button>
+              <button class="a-tab" id="tab-slack" role="tab" aria-selected="false" aria-controls="apanel-slack">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 15a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2h2v2zm1 0a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-5zm2-8a2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 2v2H9zm0 1a2 2 0 0 1 2 2 2 2 0 0 1-2 2H4a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5zm8 2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2v-2zm-1 0a2 2 0 0 1-2 2 2 2 0 0 1-2-2V5a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5zm-2 8a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2v-2h2zm0-1a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-5z"/></svg>
+                Slack
+              </button>
+            </div>
+
+            <!-- Email panel -->
+            <div class="alert-panel" id="apanel-email" role="tabpanel" aria-labelledby="tab-email">
+              <div class="alert-email-mock">
+                <div class="email-toolbar">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/></svg>
+                  admin@company.com — Inbox
+                </div>
+                <div class="email-subject-bar">
+                  <div class="subject-line">🚨 [ServerMon] WARNING — web-server-01 — DISK</div>
+                  <div class="from-line">From: servermon@web-server-01 · 2026-05-21 14:32:01</div>
+                </div>
+                <div class="email-body">
+                  <div><span class="el-label">SERVER ALERT</span> <span class="el-val-red">— WARNING</span></div>
+                  <div>════════════════════════════</div>
+                  <div><span class="el-label">Server:</span>     <span class="el-val">web-server-01</span></div>
+                  <div><span class="el-label">Time:</span>       <span class="el-val">2026-05-21 14:32:01</span></div>
+                  <div><span class="el-label">Alert Type:</span> <span class="el-val-red">DISK</span></div>
+                  <div><span class="el-label">Severity:</span>   <span class="el-val-amber">WARNING</span></div>
+                  <div><span class="el-label">Detail:</span>     <span class="el-val">/var/log: 87% used</span></div>
+                  <div>&nbsp;</div>
+                  <div><span class="el-label">Uptime:</span>     <span class="el-val-green">18 days, 6 hours</span></div>
+                  <div><span class="el-label">Log:</span>        <span class="el-val">/var/log/healthmonitor/monitor.log</span></div>
+                </div>
+                <div class="email-footer">-- Auto-generated by ServerHealthMonitor v1.0.0</div>
+              </div>
+            </div>
+
+            <!-- Slack panel -->
+            <div class="alert-panel hidden" id="apanel-slack" role="tabpanel" aria-labelledby="tab-slack">
+              <div class="slack-mock">
+                <div class="slack-header">
+                  <div class="slack-workspace">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 15a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2h2v2zm1 0a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-5zm2-8a2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 2v2H9zm0 1a2 2 0 0 1 2 2 2 2 0 0 1-2 2H4a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5zm8 2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2v-2zm-1 0a2 2 0 0 1-2 2 2 2 0 0 1-2-2V5a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5zm-2 8a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2v-2h2zm0-1a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-5z"/></svg>
+                    ServerOps Workspace
+                  </div>
+                  <div class="slack-channel"># alerts</div>
+                </div>
+                <div class="slack-message">
+                  <div class="slack-avatar" aria-hidden="true">🤖</div>
+                  <div class="slack-msg-body">
+                    <div class="slack-sender">
+                      ServerHealthMonitor
+                      <span class="slack-app-badge">APP</span>
+                      <span class="slack-time">Today at 14:32</span>
+                    </div>
+                    <div class="slack-attachment slack-att-red">
+                      <div class="slack-att-content">
+                        <div class="slack-att-title">🚨 ALERT — web-server-01 — DISK THRESHOLD EXCEEDED</div>
+                        <div class="slack-att-fields">
+                          <div class="slack-field">
+                            <span class="slack-field-key">Server</span>
+                            <span class="slack-field-val">web-server-01</span>
+                          </div>
+                          <div class="slack-field">
+                            <span class="slack-field-key">Alert Type</span>
+                            <span class="slack-field-val slack-val-red">DISK</span>
+                          </div>
+                          <div class="slack-field">
+                            <span class="slack-field-key">Severity</span>
+                            <span class="slack-field-val slack-val-amber">WARNING</span>
+                          </div>
+                          <div class="slack-field">
+                            <span class="slack-field-key">Detail</span>
+                            <span class="slack-field-val">/var/log: 87% used (3.2G free of 25G)</span>
+                          </div>
+                        </div>
+                        <div class="slack-att-footer">ServerHealthMonitor v1.0.0 · 2026-05-21 14:32:01</div>
+                      </div>
+                    </div>
+                    <div class="slack-reaction">
+                      <span class="slack-emoji">👀</span> 1
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: channel cards -->
+          <div class="alert-channels">
+            <div class="channel-card reveal" data-delay="1">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div>
+                <div class="channel-title">Email (mailx/sendmail)</div>
+                <div class="channel-desc">Plain-text alert sent via system mail agent. Works with any SMTP relay — Postfix, sendmail, msmtp. Configure <code>ALERT_EMAIL</code> in config.conf.</div>
+                <span class="channel-code">ALERT_METHOD="email"</span>
+              </div>
+            </div>
+            <div class="channel-card reveal" data-delay="2">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 15a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2h2v2zm1 0a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-5zm2-8a2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 2v2H9zm0 1a2 2 0 0 1 2 2 2 2 0 0 1-2 2H4a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5zm8 2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2v-2zm-1 0a2 2 0 0 1-2 2 2 2 0 0 1-2-2V5a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5zm-2 8a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2v-2h2zm0-1a2 2 0 0 1-2-2 2 2 0 0 1 2-2h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-5z"/></svg>
+              </div>
+              <div>
+                <div class="channel-title">Slack Webhook</div>
+                <div class="channel-desc">JSON payload sent via <code>curl</code> to your Incoming Webhook URL. Zero dependencies beyond curl — already on every Linux server. Configure <code>SLACK_WEBHOOK</code>.</div>
+                <span class="channel-code">ALERT_METHOD="slack"</span>
+              </div>
+            </div>
+            <div class="channel-card reveal" data-delay="3">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              </div>
+              <div>
+                <div class="channel-title">Both channels simultaneously</div>
+                <div class="channel-desc">Critical infrastructure alerts should reach you on multiple channels. Set <code>ALERT_METHOD="both"</code> to fire email and Slack on every threshold breach.</div>
+                <span class="channel-code">ALERT_METHOD="both"</span>
+              </div>
+            </div>
+            <div class="channel-card reveal" data-delay="4">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div>
+                <div class="channel-title">Cooldown protection</div>
+                <div class="channel-desc">Cooldown files in <code>/var/log/healthmonitor/.cooldown/</code> track last-sent timestamp per alert type. Duplicate alerts are suppressed for <code>ALERT_COOLDOWN</code> seconds (default: 1800).</div>
+                <span class="channel-code">ALERT_COOLDOWN=1800</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ SKILLS ═══════════════════════════════ -->
+    <section id="skills">
+      <div class="section-inner">
+        <header class="section-header reveal">
+          <p class="section-tag">SKILLS</p>
+          <h2 class="section-title">Linux & DevOps skills demonstrated</h2>
+          <p class="section-sub">Every script exercises production-relevant skills applicable to RHCSA EX200 and real-world sysadmin/DevOps roles.</p>
+        </header>
+        <div class="skills-grid" id="skills-grid">
+          <!-- Populated by main.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ PIPELINE ══════════════════════════════ -->
+    <section id="pipeline">
+      <div class="section-inner">
+        <header class="section-header reveal">
+          <p class="section-tag">PIPELINE</p>
+          <h2 class="section-title">Every 5 minutes, automatically</h2>
+          <p class="section-sub">Zero manual intervention required. The pipeline runs silently when healthy — you only hear from it when something needs attention.</p>
+        </header>
+
+        <!-- Animated connector track -->
+        <div class="pipe-track-outer reveal">
+          <div class="pipe-track-fill" id="pipe-track-fill"></div>
+        </div>
+
+        <!-- Steps grid -->
+        <div class="pipeline-steps reveal">
+          <div class="pipe-step">
+            <div class="pipe-step-icon pipe-icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="pipe-step-num">01</div>
+            <div class="pipe-step-title">Cron fires</div>
+            <div class="pipe-step-desc">cron.d fires orchestrator every 5 min as root</div>
+            <span class="pipe-step-code">*/5 * * * *</span>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-step-icon pipe-icon-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+            </div>
+            <div class="pipe-step-num">02</div>
+            <div class="pipe-step-title">Config loaded</div>
+            <div class="pipe-step-desc">config.conf sourced — thresholds and services set</div>
+            <span class="pipe-step-code">source config.conf</span>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-step-icon pipe-icon-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="pipe-step-num">03</div>
+            <div class="pipe-step-title">All checks run</div>
+            <div class="pipe-step-desc">CPU, RAM, disk, services, network checked in sequence</div>
+            <span class="pipe-step-code">check_cpu | check_ram…</span>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-step-icon pipe-icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="pipe-step-num">04</div>
+            <div class="pipe-step-title">Results logged</div>
+            <div class="pipe-step-desc">Every result written to monitor.log with timestamp</div>
+            <span class="pipe-step-code">/var/log/healthmonitor/</span>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-step-icon pipe-icon-red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="pipe-step-num">05</div>
+            <div class="pipe-step-title">Alert or OK</div>
+            <div class="pipe-step-desc">Breach → send_alert fires; healthy → exit 0 silently</div>
+            <span class="pipe-step-code">exit 0 | exit 1</span>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-step-icon pipe-icon-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div class="pipe-step-num">06</div>
+            <div class="pipe-step-title">Daily report</div>
+            <div class="pipe-step-desc">08:00 — HTML report parsed from logs, emailed to manager</div>
+            <span class="pipe-step-code">0 8 * * *</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ PLAYGROUND ════════════════════════════ -->
+    <section id="playground">
+      <div class="section-inner">
+        <header class="section-header reveal">
+          <p class="section-tag">PLAYGROUND</p>
+          <h2 class="section-title">Simulate a health check</h2>
+          <p class="section-sub">Configure thresholds and metric values to see exactly what the monitor would log and alert on. No server required.</p>
+        </header>
+        <div class="playground-grid reveal">
+          <div class="play-form">
+            <h3>Configure Check</h3>
+
+            <!-- Live gauge row -->
+            <div class="play-gauge-row" aria-label="Live metric gauges">
+              <div class="play-gauge-item">
+                <svg class="play-gauge-svg" viewBox="0 0 100 100" aria-hidden="true">
+                  <circle class="gauge-track" cx="50" cy="50" r="38"/>
+                  <circle class="gauge-arc" id="pg-cpu-arc" cx="50" cy="50" r="38"/>
+                  <text class="gauge-pct" id="pg-cpu-text" x="50" y="50" text-anchor="middle" dominant-baseline="central">23%</text>
+                </svg>
+                <div class="play-gauge-label">CPU</div>
+              </div>
+              <div class="play-gauge-item">
+                <svg class="play-gauge-svg" viewBox="0 0 100 100" aria-hidden="true">
+                  <circle class="gauge-track" cx="50" cy="50" r="38"/>
+                  <circle class="gauge-arc" id="pg-ram-arc" cx="50" cy="50" r="38"/>
+                  <text class="gauge-pct" id="pg-ram-text" x="50" y="50" text-anchor="middle" dominant-baseline="central">41%</text>
+                </svg>
+                <div class="play-gauge-label">RAM</div>
+              </div>
+              <div class="play-gauge-item">
+                <svg class="play-gauge-svg" viewBox="0 0 100 100" aria-hidden="true">
+                  <circle class="gauge-track" cx="50" cy="50" r="38"/>
+                  <circle class="gauge-arc" id="pg-disk-arc" cx="50" cy="50" r="38"/>
+                  <text class="gauge-pct" id="pg-disk-text" x="50" y="50" text-anchor="middle" dominant-baseline="central">45%</text>
+                </svg>
+                <div class="play-gauge-label">DISK</div>
+              </div>
+            </div>
+
+            <!-- Live status chips -->
+            <div class="play-status-row" id="play-status-row" aria-label="Check status indicators">
+              <div class="play-chip play-chip-ok" id="pchip-cpu">
+                <span class="play-chip-dot" aria-hidden="true"></span>
+                <span class="play-chip-label">CPU</span>
+                <span class="play-chip-val" id="pchip-cpu-val">OK</span>
+              </div>
+              <div class="play-chip play-chip-ok" id="pchip-ram">
+                <span class="play-chip-dot" aria-hidden="true"></span>
+                <span class="play-chip-label">RAM</span>
+                <span class="play-chip-val" id="pchip-ram-val">OK</span>
+              </div>
+              <div class="play-chip play-chip-ok" id="pchip-disk">
+                <span class="play-chip-dot" aria-hidden="true"></span>
+                <span class="play-chip-label">DISK</span>
+                <span class="play-chip-val" id="pchip-disk-val">OK</span>
+              </div>
+              <div class="play-chip play-chip-ok" id="pchip-svc">
+                <span class="play-chip-dot" aria-hidden="true"></span>
+                <span class="play-chip-label">SVC</span>
+                <span class="play-chip-val" id="pchip-svc-val">OK</span>
+              </div>
+              <div class="play-chip play-chip-ok" id="pchip-net">
+                <span class="play-chip-dot" aria-hidden="true"></span>
+                <span class="play-chip-label">NET</span>
+                <span class="play-chip-val" id="pchip-net-val">OK</span>
+              </div>
+            </div>
+
+            <div class="play-field">
+              <label for="play-scenario">Quick scenario</label>
+              <select class="play-select" id="play-scenario">
+                <option value="healthy">All healthy — no alerts</option>
+                <option value="cpu-spike">CPU spike — alert firing</option>
+                <option value="disk-full">Disk full — alert firing</option>
+                <option value="service-down">Service down + auto-restart</option>
+                <option value="network-fail">Network failure</option>
+                <option value="critical">Multiple alerts — critical state</option>
+              </select>
+            </div>
+            <div class="play-field">
+              <label for="play-cpu">CPU Usage <span class="play-threshold-hint">(threshold: 85%)</span></label>
+              <div class="play-range-wrap">
+                <input type="range" class="play-range" id="play-cpu" min="0" max="100" value="23" aria-valuetext="23 percent" />
+                <span class="play-range-val" id="play-cpu-val">23%</span>
+              </div>
+            </div>
+            <div class="play-field">
+              <label for="play-ram">RAM Usage <span class="play-threshold-hint">(threshold: 90%)</span></label>
+              <div class="play-range-wrap">
+                <input type="range" class="play-range" id="play-ram" min="0" max="100" value="41" aria-valuetext="41 percent" />
+                <span class="play-range-val" id="play-ram-val">41%</span>
+              </div>
+            </div>
+            <div class="play-field">
+              <label for="play-disk">Disk Usage <span class="play-threshold-hint">(threshold: 80%)</span></label>
+              <div class="play-range-wrap">
+                <input type="range" class="play-range" id="play-disk" min="0" max="100" value="45" aria-valuetext="45 percent" />
+                <span class="play-range-val" id="play-disk-val">45%</span>
+              </div>
+            </div>
+            <div class="play-field">
+              <label for="play-service">Service status</label>
+              <select class="play-select" id="play-service">
+                <option value="all-ok">All services running</option>
+                <option value="nginx-down">nginx — failed</option>
+                <option value="mysql-down">mysql — inactive</option>
+                <option value="nginx-restart">nginx — failed → restarted OK</option>
+              </select>
+            </div>
+            <div class="play-field">
+              <label for="play-net">Network</label>
+              <select class="play-select" id="play-net">
+                <option value="ok">All connectivity OK</option>
+                <option value="icmp-fail">ICMP unreachable</option>
+                <option value="dns-fail">DNS resolution failed</option>
+              </select>
+            </div>
+            <button class="play-btn" id="play-run-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Run Health Check
+            </button>
+          </div>
+
+          <div class="play-terminal">
+            <div class="play-term-header">
+              <div class="play-term-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+              <span class="play-term-title">admin@web-server-01 — health_monitor.sh --verbose</span>
+              <div class="play-term-exit" id="play-term-exit" aria-label="Exit code"></div>
+            </div>
+            <div class="play-term-body" id="play-term-body">
+              <span class="play-placeholder">Configure a check above and click "Run Health Check" to simulate the monitor output.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </main>
+
+    <!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+    <footer>
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="footer-brand-text">SERVER HEALTH MONITOR</span>
+          <span class="footer-tagline">Production Bash monitoring for RHEL 9, Rocky Linux, CentOS, and Ubuntu.</span>
+        </div>
+        <div class="footer-links">
+          <a class="footer-link" href="#scripts">Scripts</a>
+          <a class="footer-link" href="#architecture">Architecture</a>
+          <a class="footer-link" href="#alert-demo">Alerts</a>
+          <a class="footer-link" href="#playground">Playground</a>
+          <a class="footer-link" href="https://github.com/samiulAsumel/server-health-monitor" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>Built by Samiul Alam · RHCSA / DevOps Engineer</span>
+        <span class="footer-version">ServerHealthMonitor v1.0.0 · RHEL 9</span>
+      </div>
+    </footer>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQ4n5wg==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+    <script src="scripts-data.js" defer></script>
+    <script src="main.js" defer></script>
+    <script src="playground.js" defer></script>
+  </body>
+</html>
