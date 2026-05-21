@@ -131,25 +131,29 @@ function initProgressBar() {
 // MOBILE HAMBURGER
 // ════════════════════════════════════════════════════════════════════════════
 function initHamburger() {
-  const btn = document.getElementById('hamburger');
-  const nav = document.getElementById('header-nav');
-  if (!btn || !nav) return;
+  const btn     = document.getElementById('hamburger');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  if (!btn || !overlay) return;
+
+  const close = () => {
+    btn.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('nav-overlay');
+  };
 
   btn.addEventListener('click', () => {
     const open = btn.classList.toggle('open');
     btn.setAttribute('aria-expanded', open);
-    nav.classList.toggle('nav-open', open);
+    overlay.classList.toggle('open', open);
+    overlay.setAttribute('aria-hidden', !open);
     document.body.classList.toggle('nav-overlay', open);
   });
 
-  nav.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      btn.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
-      nav.classList.remove('nav-open');
-      document.body.classList.remove('nav-overlay');
-    });
-  });
+  overlay.querySelectorAll('.mnav-link').forEach(link => link.addEventListener('click', close));
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -438,7 +442,7 @@ function animateCounters() {
 // ACTIVE NAV HIGHLIGHT on scroll
 // ════════════════════════════════════════════════════════════════════════════
 function initNavHighlight() {
-  const sections = document.querySelectorAll('section[id], #stats-bar');
+  const sections = document.querySelectorAll('section[id], #stats-bar, #quick-install, #cta');
   const links    = document.querySelectorAll('.nav-link');
   const obs = new IntersectionObserver(
     entries => entries.forEach(e => {
@@ -451,6 +455,53 @@ function initNavHighlight() {
     { rootMargin: '-40% 0px -55% 0px' }
   );
   sections.forEach(s => obs.observe(s));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SCROLL-TO-TOP
+// ════════════════════════════════════════════════════════════════════════════
+function initScrollToTop() {
+  const btn = document.getElementById('scroll-top');
+  if (!btn) return;
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 500);
+  }, { passive: true });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PIPELINE STEP LIGHTING (sequential glow on scroll into view)
+// ════════════════════════════════════════════════════════════════════════════
+function initPipelineLighting() {
+  const steps = document.querySelectorAll('.pipe-step');
+  const container = document.querySelector('.pipeline-steps');
+  if (!steps.length || !container) return;
+
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) {
+        steps.forEach((step, i) => setTimeout(() => step.classList.add('lit'), 350 + i * 200));
+        obs.unobserve(e.target);
+      }
+    }),
+    { threshold: 0.2 }
+  );
+  obs.observe(container);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// QUICK INSTALL COPY BUTTONS
+// ════════════════════════════════════════════════════════════════════════════
+function initQiCopyBtns() {
+  document.querySelectorAll('.qi-copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy;
+      if (!text) return;
+      await copyText(text);
+      btn.classList.add('copied');
+      setTimeout(() => btn.classList.remove('copied'), 1800);
+    });
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -470,6 +521,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollReveal();
   initSkillBarObserver();
   initPipelineFill();
+  initPipelineLighting();
   animateCounters();
   initNavHighlight();
+  initScrollToTop();
+  initQiCopyBtns();
 });
